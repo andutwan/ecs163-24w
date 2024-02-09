@@ -1,22 +1,25 @@
-let abFilter = 25
 const width = window.innerWidth;
 const height = window.innerHeight;
 
 let scatterLeft = 0, scatterTop = 0;
-let scatterMargin = {top: 40, right: 30, bottom: 30, left: 60},
+let scatterMargin = {top: 40, right: 30, bottom: 20, left: 70},
     scatterWidth = 400 - scatterMargin.left - scatterMargin.right,
     scatterHeight = 350 - scatterMargin.top - scatterMargin.bottom;
 
 let distrLeft = 400, distrTop = 0;
-let distrMargin = {top: 10, right: 30, bottom: 30, left: 60},
+let distrMargin = {top: 10, right: 30, bottom: 40, left: 60},
     distrWidth = 400 - distrMargin.left - distrMargin.right,
     distrHeight = 350 - distrMargin.top - distrMargin.bottom;
 
 let teamLeft = 0, teamTop = 500;
-let teamMargin = {top: 60, right: 60, bottom: 30, left: 60},
-    teamWidth = width - teamMargin.left - teamMargin.right,
+let teamMargin = {top: 50, right: 100, bottom: 70, left: 70},
+    teamWidth = width-1000 - teamMargin.left - teamMargin.right,
     teamHeight = height-450 - teamMargin.top - teamMargin.bottom;
 
+let distr2Left = 600, distr2Top = 0;
+let distr2Margin = {top: 10, right: 30, bottom: 30, left: 60},
+    distr2Width = 400 - distr2Margin.left - distr2Margin.right,
+    distr2Height = 350 - distr2Margin.top - distr2Margin.bottom;
 
 d3.csv("pokemon.csv").then(rawData =>{
     console.log("rawData", rawData);
@@ -25,15 +28,19 @@ d3.csv("pokemon.csv").then(rawData =>{
         d.type = Number(d.type)
         d.Total = Number(d.Total);
         d.Catch_Rate = Number(d.Catch_Rate);
+        d.Generation = Number(d.Generation);
     });
     
 
     // rawData = rawData.filter(d=>d.AB>abFilter);
     rawData = rawData.map(d=>{
                           return {
-                              "Catch_Rate":d.Catch_Rate,
-                              "Total":d.Total,
-                              "Type_1":d.Type_1,
+                            "Name":d.Name,
+                            "Type_1":d.Type_1,
+                            "Type_2":d.Type_2,
+                            "Catch_Rate":d.Catch_Rate,
+                            "Generation":d.Generation,
+                            "Total":d.Total,
                           };
     });
     console.log(rawData);
@@ -186,7 +193,7 @@ d3.csv("pokemon.csv").then(rawData =>{
     .attr("height", d => teamHeight - y2(d.count))
     .attr("fill", "lightblue")
 
-
+// Plot 3
 
 
 
