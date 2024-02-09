@@ -3,7 +3,7 @@ const height = window.innerHeight;
 
 let scatterLeft = 0, scatterTop = 0;
 let scatterMargin = {top: 40, right: 30, bottom: 20, left: 70},
-    scatterWidth = 400 - scatterMargin.left - scatterMargin.right,
+    scatterWidth = 500 - scatterMargin.left - scatterMargin.right,
     scatterHeight = 350 - scatterMargin.top - scatterMargin.bottom;
 
 let distrLeft = 400, distrTop = 0;
@@ -13,13 +13,19 @@ let distrMargin = {top: 10, right: 30, bottom: 40, left: 60},
 
 let teamLeft = 0, teamTop = 500;
 let teamMargin = {top: 50, right: 100, bottom: 70, left: 70},
-    teamWidth = width-200 - teamMargin.left - teamMargin.right,
+    teamWidth = width-1000 - teamMargin.left - teamMargin.right,
     teamHeight = height-450 - teamMargin.top - teamMargin.bottom;
 
 let distr2Left = 600, distr2Top = 0;
 let distr2Margin = {top: 10, right: 30, bottom: 30, left: 60},
     distr2Width = 400 - distr2Margin.left - distr2Margin.right,
     distr2Height = 350 - distr2Margin.top - distr2Margin.bottom;
+
+let fireLeft = 1000, fireTop = 0;
+let fireMargin = {top: 40, right: 60, bottom: 50, left: 60},
+    fireWidth = 500 - fireMargin.left - fireMargin.right,
+    fireHeight = 350 - fireMargin.top - fireMargin.bottom;
+
 
 d3.csv("pokemon.csv").then(rawData =>{
     console.log("rawData", rawData);
@@ -31,20 +37,22 @@ d3.csv("pokemon.csv").then(rawData =>{
         d.Generation = Number(d.Generation);
     });
     
-
-    // rawData = rawData.filter(d=>d.AB>abFilter);
     rawData = rawData.map(d=>{
                           return {
-                            "Name":d.Name,
-                            "Type_1":d.Type_1,
-                            "Type_2":d.Type_2,
-                            "Catch_Rate":d.Catch_Rate,
-                            "Generation":d.Generation,
-                            "Total":d.Total,
+                              "Name":d.Name,
+                              "Type_1":d.Type_1,
+                              "Type_2":d.Type_2,
+                              "Catch_Rate":d.Catch_Rate,
+                              "Generation":d.Generation,
+                              "Total":d.Total,
                           };
     });
     console.log(rawData);
-    
+
+    q = rawData.reduce((s, { Generation }) => (s[Generation] = (s[Generation] || 0) + 1, s), {});
+    r = Object.keys(q).map((key) => ({ Type_1: key, count: q[key] }));
+    const color1 = d3.scaleOrdinal(rawData.map(d => d.Generation), d3.schemeCategory10);
+
 //plot 1
     const svg = d3.select("svg")
 
@@ -58,7 +66,7 @@ d3.csv("pokemon.csv").then(rawData =>{
     .attr("y", 0)
     .attr("font-size", "20px")
     .attr("text-anchor", "middle")
-    .text("Catch Rate V.S. Total Stats")
+    .text("Catch Rate VS Total Stats By Generation")
 
     // X label
     g1.append("text")
@@ -76,7 +84,7 @@ d3.csv("pokemon.csv").then(rawData =>{
     .attr("font-size", "20px")
     .attr("text-anchor", "middle")
     .attr("transform", "rotate(-90)")
-    .text("Total")
+    .text("Total Stats")
 
     // X ticks
     const x1 = d3.scaleLinear()
@@ -113,7 +121,28 @@ d3.csv("pokemon.csv").then(rawData =>{
              return y1(d.Total);
          })
          .attr("r", 3)
-         .attr("fill", "#69b3a2")
+        //  .attr("fill", "#69b3a2")
+        .attr("fill", d => color1(d.Type_1))
+
+    g1.selectAll("mydots")
+         .data(r)
+         .enter()
+         .append("circle")
+            .attr("cx", 600)
+            .attr("cy", function(d, i) { return 100 + i*25})
+            .attr("r", 7)
+            .style("fill", d => color1(d.Type_1))
+    
+    g1.selectAll("mylabels")
+         .data(r)
+         .enter()
+         .append("text")
+            .attr("x", 620)
+            .attr("y", function(d, i) { return 106 + i*25})
+            .style("fill", d => color1(d.Type_1))
+            .text(d => d.Type_1)
+            .attr("text-anchor", "left")
+            .style("allignment-baseline", "middle")
 
 //space
     const g2 = svg.append("g")
@@ -122,12 +151,12 @@ d3.csv("pokemon.csv").then(rawData =>{
                 .attr("transform", `translate(${distrLeft}, ${distrTop})`)
 
 //plot 2
-    
-    q = rawData.reduce((s, { Type_1 }) => (s[Type_1] = (s[Type_1] || 0) + 1, s), {});
-    r = Object.keys(q).map((key) => ({ Type_1: key, count: q[key] }));
-    console.log(r);
+    const color2 = d3.scaleOrdinal(rawData.map(d => d.Type_1), d3.schemeCategory10);
 
-           
+    // q = rawData.reduce((s, { Generation }) => (s[Generation] = (s[Generation] || 0) + 1, s), {});
+    // r = Object.keys(q).map((key) => ({ Type_1: key, count: q[key] }));
+    console.log(r);    
+
     const g3 = svg.append("g")
                 .attr("width", teamWidth + teamMargin.left + teamMargin.right)
                 .attr("height", teamHeight + teamMargin.top + teamMargin.bottom)
@@ -138,15 +167,15 @@ d3.csv("pokemon.csv").then(rawData =>{
     .attr("y", 0)
     .attr("font-size", "20px")
     .attr("text-anchor", "middle")
-    .text("Number of Pokemon in each type")
+    .text("# of Pokemon In Each Generation")
 
     // X label
     g3.append("text")
     .attr("x", teamWidth / 2)
-    .attr("y", teamHeight + 60)
+    .attr("y", teamHeight + 40)
     .attr("font-size", "20px")
     .attr("text-anchor", "middle")
-    .text("Pokemon Type")
+    .text("Generation")
     
 
     // Y label
@@ -171,9 +200,9 @@ d3.csv("pokemon.csv").then(rawData =>{
     .call(xAxisCall2)
     .selectAll("text")
         .attr("y", "10")
-        .attr("x", "-5")
+        .attr("x", "2")
         .attr("text-anchor", "end")
-        .attr("transform", "rotate(-40)")
+        // .attr("transform", "rotate(-40)")
 
     // Y ticks
     const y2 = d3.scaleLinear()
@@ -191,33 +220,63 @@ d3.csv("pokemon.csv").then(rawData =>{
     .attr("x", (d) => x2(d.Type_1))
     .attr("width", x2.bandwidth)
     .attr("height", d => teamHeight - y2(d.count))
-    .attr("fill", "lightblue")
+    .attr("fill", d => color2(d.Type_1))
+
+    var size = 20
+    g3.selectAll("mydots")
+    .data(r)
+    .enter()
+    .append("rect")
+        .attr("x", 800)
+        .attr("y", function(d,i){ return 100 + i*(size+5)}) // 100 is where the first dot appears. 25 is the distance between dots
+        .attr("width", size)
+        .attr("height", size)
+        // .style("fill", function(d){ return color(d)})
+        .style("fill", d => color2(d.Type_1))
+
+    g3.selectAll("mylabels")
+    .data(r)
+    .enter()
+    .append("text")
+        .attr("x", 800 + size*1.2)
+        .attr("y", function(d,i){ return 100 + i*(size+5) + (size/2)}) // 100 is where the first dot appears. 25 is the distance between dots
+        // .style("fill", function(d){ return color(d)})
+        .style("fill", d => color2(d.Type_1))
+        // .text(function(d){ return d})
+        .text(d => d.Type_1)
+        .attr("text-anchor", "left")
+        .style("alignment-baseline", "middle")
+
+//space
+    const g4 = svg.append("g")
+        .attr("width", distr2Width + distr2Margin.left + distr2Margin.right)
+        .attr("height", distr2Height + distr2Margin.top + distr2Margin.bottom)
+        .attr("transform", `translate(${distr2Left}, ${distr2Top})`)
 
 // Plot 3
+    // Gets the fire pokemons
+    function getFirePokemonSecondType(rawData) {
+        const secondType = {};
+        rawData.forEach(element => {
+            const type1 = element.Type_1;
 
+            if (type1 == 'Fire') {
+                secondType[element.Name] = element.Type_2;
+            }
+        });
 
+        return secondType;
+    }
 
+    const fireSecondType = getFirePokemonSecondType(rawData);
 
+    console.log(fireSecondType);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    const g5 = svg.append("g")
+        .attr("width", fireWidth + fireMargin.left + fireMargin.right)
+        .attr("height", fireHeight + fireMargin.top + fireMargin.bottom)
+        .attr("transform", `translate(${fireMargin.left}, ${fireTop})`)
+    
 
 
 
